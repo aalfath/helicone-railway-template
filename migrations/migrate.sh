@@ -32,18 +32,19 @@ PY
 
 wait_tcp() {
   local name="$1" host="$2" port="$3" i=0
-  until (exec 3<>"/dev/tcp/$host/$port") 2>/dev/null; do
+  until timeout 5 bash -c "exec 3<>/dev/tcp/$host/$port" 2>/dev/null; do
     i=$((i + 1)); [ "$i" -le 180 ] || { echo "railway: $name not reachable at $host:$port" >&2; exit 1; }
     echo "railway: waiting for $name ($host:$port)"; sleep 5
   done
 }
 wait_tcp Postgres "$PG_HOST" "$PG_PORT"
 wait_tcp ClickHouse "$CH_HOST" "$CH_PORT"
-until curl -fsS "http://$CH_HOST:$CH_PORT/ping" >/dev/null 2>&1; do
+until curl -fsS -m 5 "http://$CH_HOST:$CH_PORT/ping" >/dev/null 2>&1; do
   echo "railway: waiting for ClickHouse /ping"; sleep 5
 done
 
 cd /app
+echo "railway: Postgres and ClickHouse reachable"
 echo "railway: Postgres migrations"
 flyway repair -configFiles=/app/supabase/flyway.conf
 flyway migrate -configFiles=/app/supabase/flyway.conf
