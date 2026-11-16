@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-16: Deploy on Railway button
+
+- README starts with the Deploy on Railway button for the published template (`helicone`). No change to any service.
+
 ## 2026-11-16: Helicone v2025.08.21
 
 First version.
