@@ -1,0 +1,18 @@
+<!-- Railway hosts report dozens of CPUs, and ClickHouse sizes its thread pools and
+     each query's threads by CPU count. That ran into the container's thread limit
+     ("cannot start thread"). Keep thread use small and fixed. -->
+<clickhouse>
+    <concurrent_threads_soft_limit_num>32</concurrent_threads_soft_limit_num>
+    <max_thread_pool_size>2000</max_thread_pool_size>
+    <max_io_thread_pool_size>16</max_io_thread_pool_size>
+    <max_backups_io_thread_pool_size>8</max_backups_io_thread_pool_size>
+    <background_schedule_pool_size>16</background_schedule_pool_size>
+    <background_message_broker_schedule_pool_size>2</background_message_broker_schedule_pool_size>
+    <background_distributed_schedule_pool_size>2</background_distributed_schedule_pool_size>
+    <background_buffer_flush_schedule_pool_size>2</background_buffer_flush_schedule_pool_size>
+    <max_active_parts_loading_thread_pool_size>4</max_active_parts_loading_thread_pool_size>
+    <max_outdated_parts_loading_thread_pool_size>4</max_outdated_parts_loading_thread_pool_size>
+    <max_parts_cleaning_thread_pool_size>4</max_parts_cleaning_thread_pool_size>
+    <tables_loader_foreground_pool_size>4</tables_loader_foreground_pool_size>
+    <tables_loader_background_pool_size>4</tables_loader_background_pool_size>
+</clickhouse>

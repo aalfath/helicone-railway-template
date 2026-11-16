@@ -6,5 +6,8 @@ ENV CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
 
 # Listen on IPv6 and IPv4, so Railway's private network reaches it.
 COPY listen.xml /etc/clickhouse-server/config.d/zz-railway-listen.xml
+# Fixed, small thread pools (Railway hosts report many CPUs).
+COPY threads.xml /etc/clickhouse-server/config.d/zz-railway-threads.xml
+COPY user-threads.xml /etc/clickhouse-server/users.d/zz-railway-threads.xml
 # Small-instance memory settings.
 COPY low-memory.xml /etc/clickhouse-server/config.d/zz-railway-low-memory.xml
