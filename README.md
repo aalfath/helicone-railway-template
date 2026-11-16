@@ -1,3 +1,5 @@
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/helicone?utm_medium=integration&utm_source=button&utm_campaign=helicone)
+
 # Helicone on Railway
 
 A Railway template for [Helicone](https://github.com/Helicone/helicone), the open-source LLM observability platform: point your OpenAI or Anthropic client at it and every request is logged with cost, latency, tokens and the full prompt and response.
