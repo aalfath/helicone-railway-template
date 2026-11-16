@@ -1,0 +1,49 @@
+# Routes on the public domain (Railway's edge terminates TLS):
+#   /jawn/*                           -> jawn (API and LLM proxy), prefix stripped
+#   /request-response-storage/* etc.  -> minio (presigned body downloads)
+#   everything else                   -> web (dashboard)
+# Upstreams come from WEB_UPSTREAM, JAWN_UPSTREAM and S3_UPSTREAM.
+{
+	admin off
+	persist_config off
+	auto_https off
+	servers {
+		trusted_proxies static private_ranges 100.64.0.0/10
+	}
+}
+
+:{$PORT:8080} {
+	handle /_health {
+		respond "OK" 200
+	}
+
+	# The first admin is created by the migrations service. New sign-ups stay
+	# closed unless HELICONE_ALLOW_SIGNUP=true is set on this service.
+	@signup {
+		path /api/auth/sign-up /api/auth/sign-up/*
+		not expression `{env.HELICONE_ALLOW_SIGNUP} == "true"`
+	}
+	handle @signup {
+		respond "Sign-up is closed on this Helicone instance." 403
+	}
+
+	# Jawn serves /run-loops/* without auth outside production mode.
+	handle /jawn/run-loops* {
+		respond 404
+	}
+
+	handle_path /jawn/* {
+		reverse_proxy {$JAWN_UPSTREAM} {
+			flush_interval -1
+		}
+	}
+
+	@s3 path /request-response-storage/* /prompt-body-storage/* /hql-store/*
+	handle @s3 {
+		reverse_proxy {$S3_UPSTREAM}
+	}
+
+	handle {
+		reverse_proxy {$WEB_UPSTREAM}
+	}
+}

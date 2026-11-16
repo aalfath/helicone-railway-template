@@ -1,0 +1,75 @@
+# Local test of the Railway template (same images and variables, Postgres in place
+# of Railway's). Run: docker compose up --build, then open http://localhost:8080.
+name: helicone-railway-template
+
+x-db: &db
+  DATABASE_URL: postgresql://postgres:localtest@postgres:5432/helicone
+  CLICKHOUSE_HOST: http://clickhouse:8123
+  CLICKHOUSE_PASSWORD: localclickhouse
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: localtest
+      POSTGRES_DB: helicone
+    volumes: [pg:/var/lib/postgresql/data]
+
+  clickhouse:
+    build: ./clickhouse
+    environment:
+      CLICKHOUSE_PASSWORD: localclickhouse
+    volumes: [ch:/var/lib/clickhouse]
+
+  minio:
+    build: ./minio
+    environment:
+      PORT: "9000"
+      MINIO_ROOT_USER: LOCALTESTACCESSKEY01
+      MINIO_ROOT_PASSWORD: localtestsecretkey0123456789
+    volumes: [s3:/data]
+
+  migrations:
+    build: ./migrations
+    environment:
+      <<: *db
+      CLICKHOUSE_HQL_PASSWORD: localhqlpassword
+      HELICONE_ADMIN_EMAIL: admin@example.com
+      HELICONE_ADMIN_PASSWORD: localadminpassword
+    restart: on-failure
+
+  jawn:
+    build: ./jawn
+    restart: always
+    environment:
+      <<: *db
+      PORT: "8585"
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      BETTER_AUTH_SECRET: localbetterauthsecret0123456789abcdefghijk
+      CLICKHOUSE_HQL_PASSWORD: localhqlpassword
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: LOCALTESTACCESSKEY01
+      S3_SECRET_KEY: localtestsecretkey0123456789
+
+  web:
+    build: ./web
+    restart: always
+    environment:
+      <<: *db
+      PORT: "3000"
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      BETTER_AUTH_SECRET: localbetterauthsecret0123456789abcdefghijk
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: LOCALTESTACCESSKEY01
+      S3_SECRET_KEY: localtestsecretkey0123456789
+
+  helicone:
+    build: ./router
+    environment:
+      PORT: "8080"
+      WEB_UPSTREAM: web:3000
+      JAWN_UPSTREAM: jawn:8585
+      S3_UPSTREAM: minio:9000
+    ports: ["${HOST_PORT:-8080}:8080"]
+
+volumes: {pg: {}, ch: {}, s3: {}}
